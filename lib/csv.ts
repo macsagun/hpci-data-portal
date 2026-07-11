@@ -147,8 +147,13 @@ export function parseCSV(text: string): ParseResult {
       const regulars = rn(r[1], "Regulars", { integer: true, max: MAX_HEADCOUNT });
       const vip = rn(r[2], "First Timers (VIP)", { integer: true, max: MAX_HEADCOUNT });
       const giving = rn(r[3], "Tithes & Offering", { max: MAX_GIVING });
+      const sermon = (r[4] || "").trim();
+      if (!sermon) {
+        errors.push(`Sunday ${r[0]}: please add the sermon title.`);
+        continue;
+      }
       if (regulars === null || vip === null || giving === null) continue;
-      weeks.push({ date: r[0], regulars, vip, giving, sermon: r[4] || "—", preacher: r[5] || "—" });
+      weeks.push({ date: r[0], regulars, vip, giving, sermon, preacher: r[5] || "—" });
     }
   }
   if (headerIdx >= 0 && weeks.length === 0 && errors.length === 0) {

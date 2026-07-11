@@ -23,7 +23,9 @@ export default function PassphraseGate() {
             autoFocus
             className={`${styles.input} ${state.error ? styles.inputError : ""}`}
           />
-          {state.error ? <div className={styles.error}>Incorrect passphrase — please try again.</div> : null}
+          {state.error ? (
+            <div className={styles.error}>{state.message ?? "Incorrect passphrase — please try again."}</div>
+          ) : null}
           <button type="submit" className={styles.button} disabled={pending}>
             {pending ? "Checking…" : "Unlock dashboard"}
           </button>

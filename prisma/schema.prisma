@@ -83,3 +83,11 @@ model ApprovalLog {
   action   String // "approve" | "reject"
   actedAt  DateTime @default(now())
 }
+
+/// Rate limiting for the dashboard passphrase gate, keyed by client IP.
+model LoginAttempt {
+  ip          String    @id
+  failCount   Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}

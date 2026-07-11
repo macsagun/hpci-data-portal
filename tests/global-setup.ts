@@ -24,6 +24,7 @@ export default async function globalSetup() {
     await prisma.submissionWeek.deleteMany();
     await prisma.submission.deleteMany();
     await prisma.approvalLog.deleteMany();
+    await prisma.loginAttempt.deleteMany();
     for (const name of CHURCHES) {
       await prisma.church.upsert({ where: { name }, update: {}, create: { name } });
     }

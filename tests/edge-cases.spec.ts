@@ -97,6 +97,18 @@ test.describe("CSV date edge cases", () => {
     if (!r.ok) expect(r.errors.some((e) => e.includes("whole number"))).toBe(true);
   });
 
+  test("a blank sermon title in a CSV row is rejected", async () => {
+    const r = parseCSV(csvWithWeekRow("2026-06-07,100,5,10000,,Ptr. Test"));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.some((e) => e.includes("sermon title"))).toBe(true);
+  });
+
+  test("a whitespace-only sermon title in a CSV row is rejected", async () => {
+    const r = parseCSV(csvWithWeekRow('2026-06-07,100,5,10000,"   ",Ptr. Test'));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.some((e) => e.includes("sermon title"))).toBe(true);
+  });
+
   test("a well-formed CSV still parses correctly (no false positives)", async () => {
     const r = parseCSV(sampleText());
     expect(r.ok).toBe(true);
@@ -127,5 +139,33 @@ test.describe("church name resolution", () => {
       await prisma.pendingWeek.deleteMany({ where: { pendingChangeId: pending.id } });
       await prisma.pendingChange.delete({ where: { id: pending.id } });
     }
+  });
+});
+
+test.describe("passphrase rate limiting", () => {
+  // Local test traffic has no real client IP, so every login in this whole
+  // suite shares one rate-limit bucket ("unknown"). This block deliberately
+  // exhausts it, so it MUST run last and MUST clear LoginAttempt afterwards —
+  // otherwise every other test's login would start seeing the lockout too.
+  test.afterAll(async () => {
+    await prisma.loginAttempt.deleteMany();
+  });
+
+  test("3 wrong passphrases lock out further attempts, even the correct one", async ({ page }) => {
+    await page.goto("/dashboard");
+    await expect(page.getByText("Admin access only")).toBeVisible();
+
+    for (let i = 0; i < 3; i++) {
+      await page.fill("input[placeholder='Passphrase']", `definitely-wrong-${i}`);
+      await page.click("button:has-text('Unlock dashboard')");
+      await expect(page.getByText(/Incorrect passphrase|Too many wrong attempts/)).toBeVisible({ timeout: 10_000 });
+    }
+
+    // 4th attempt uses the REAL passphrase — should still be blocked by the lockout.
+    const realPassphrase = process.env.HPCI_ADMIN_PASSPHRASE ?? "hpci-pastors-2026";
+    await page.fill("input[placeholder='Passphrase']", realPassphrase);
+    await page.click("button:has-text('Unlock dashboard')");
+    await expect(page.getByText(/Too many wrong attempts/)).toBeVisible({ timeout: 10_000 });
+    expect(page.url()).not.toContain("/dashboard/overview");
   });
 });
