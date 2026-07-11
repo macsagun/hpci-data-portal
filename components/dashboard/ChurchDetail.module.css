@@ -39,7 +39,7 @@
 }
 
 .churchTitle {
-  font-size: 30px;
+  font-size: clamp(22px, 6vw, 30px);
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0;
@@ -111,6 +111,17 @@
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-top: 16px;
+}
+
+@media (max-width: 560px) {
+  .notesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .monthCardHeader,
+  .monthCardBody {
+    padding: 14px 16px;
+  }
 }
 
 .winsCard {

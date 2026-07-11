@@ -16,7 +16,10 @@ export default function TopNav({ unlocked }: { unlocked: boolean }) {
       <div className={styles.inner}>
         <Image src="/logo.svg" alt="His Presence Church" width={38} height={38} className={styles.logo} />
         <div className={styles.brand}>
-          <span className={styles.brandName}>His Presence Church</span>
+          <span className={styles.brandName}>
+            <span className={styles.fullLabel}>His Presence Church</span>
+            <span className={styles.shortLabel}>HPCI</span>
+          </span>
           <span className={styles.brandSub}>Data Portal</span>
         </div>
         <div className={styles.spacer} />
@@ -26,13 +29,15 @@ export default function TopNav({ unlocked }: { unlocked: boolean }) {
               href="/submit"
               className={`${styles.pillLink} ${isSubmit ? styles.pillLinkActive : ""}`}
             >
-              Submit Report
+              <span className={styles.fullLabel}>Submit Report</span>
+              <span className={styles.shortLabel}>Submit</span>
             </Link>
             <Link
               href="/dashboard"
               className={`${styles.pillLink} ${isDash ? styles.pillLinkActive : ""}`}
             >
-              🔒 Dashboard
+              <span className={styles.fullLabel}>🔒 Dashboard</span>
+              <span className={styles.shortLabel}>🔒</span>
             </Link>
           </div>
           {isDash && unlocked ? (

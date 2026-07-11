@@ -16,7 +16,7 @@ export default async function DashboardHeader() {
       }}
     >
       <div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 4px" }}>
+        <h1 style={{ fontSize: "clamp(22px, 6vw, 30px)", fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 4px" }}>
           Leadership Dashboard
         </h1>
         <p style={{ fontSize: "14.5px", color: "var(--muted)", margin: 0 }}>

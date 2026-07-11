@@ -11,6 +11,7 @@ export default function DashboardTabs({ pendingCount }: { pendingCount: number }
     { href: "/dashboard/overview", label: "Overview" },
     { href: "/dashboard/trends", label: "Trends" },
     { href: "/dashboard/approvals", label: "Approvals" },
+    { href: "/dashboard/audit", label: "Audit Log" },
   ];
 
   return (

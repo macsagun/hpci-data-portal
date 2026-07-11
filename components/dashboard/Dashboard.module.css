@@ -30,6 +30,18 @@
   margin-bottom: 22px;
 }
 
+@media (max-width: 860px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card {
   background: #fff;
   border: 1px solid var(--border);
@@ -123,6 +135,11 @@
   color: var(--warning-ink);
 }
 
+.badgeReject {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
 .emptyCard {
   background: #fff;
   border: 1px solid var(--border);
@@ -160,6 +177,12 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+@media (max-width: 780px) {
+  .chartsGrid2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chartCardTitle {

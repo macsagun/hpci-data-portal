@@ -4,6 +4,8 @@
   background: #f0f1f4;
   padding: 4px;
   border-radius: 11px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .pillLink {
@@ -26,6 +28,13 @@
   background: #fff;
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+}
+
+@media (max-width: 640px) {
+  .pillLink {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
 }
 
 .badge {

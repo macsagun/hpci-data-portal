@@ -13,8 +13,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     // Design-handoff prototype artifacts — not part of the app build.
-    "support.js",
-    "design_handoff_church_data_portal/**",
+    "archive/**",
   ]),
 ]);
 

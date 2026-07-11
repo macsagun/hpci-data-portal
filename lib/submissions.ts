@@ -268,3 +268,15 @@ export async function rejectPending(id: string): Promise<void> {
     });
   });
 }
+
+export type AuditLogEntry = {
+  id: string;
+  church: string;
+  monthKey: string;
+  action: string;
+  actedAt: Date;
+};
+
+export async function getAuditLog(): Promise<AuditLogEntry[]> {
+  return prisma.approvalLog.findMany({ orderBy: { actedAt: "desc" } });
+}

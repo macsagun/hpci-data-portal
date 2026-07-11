@@ -16,6 +16,13 @@
   gap: 14px;
 }
 
+@media (max-width: 640px) {
+  .selectRow {
+    grid-template-columns: 1fr;
+    padding: 18px 16px;
+  }
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -128,6 +135,12 @@
   padding: 22px 24px;
 }
 
+@media (max-width: 640px) {
+  .body {
+    padding: 16px;
+  }
+}
+
 .bodyTitle {
   font-weight: 800;
   font-size: 15px;
@@ -177,6 +190,18 @@
   gap: 12px;
 }
 
+@media (max-width: 480px) {
+  .weekGrid3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .weekGrid2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
 .weekField {
   display: flex;
   flex-direction: column;
@@ -201,6 +226,12 @@
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .longFieldsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .winsField {
@@ -253,6 +284,16 @@
   display: flex;
   justify-content: flex-end;
   background: #f9fafb;
+}
+
+@media (max-width: 640px) {
+  .footer {
+    padding: 14px 16px;
+  }
+
+  .submitBtn {
+    width: 100%;
+  }
 }
 
 .submitBtn {
