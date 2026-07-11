@@ -7,6 +7,7 @@
 // the raw text server-side.
 
 import { MONTH_NAMES, sundays } from "./dates";
+import { MAX_GIVING, MAX_HEADCOUNT } from "./limits";
 import type { ParsedSubmission } from "./types";
 
 export type ParseResult =
@@ -93,6 +94,7 @@ export function parseCSV(text: string): ParseResult {
   }
 
   const weeks: ParsedSubmission["weeks"] = [];
+  const seenDates = new Set<string>();
   if (headerIdx >= 0) {
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const r = rows[i];
@@ -102,17 +104,49 @@ export function parseCSV(text: string): ParseResult {
         errors.push(`Row "${r[0]}" has an invalid Sunday date. Use YYYY-MM-DD (e.g. 2026-06-07).`);
         continue;
       }
-      const rn = (v: string | undefined, name: string): number | null => {
+      const parsedDate = new Date(r[0] + "T00:00:00Z");
+      if (isNaN(parsedDate.getTime())) {
+        errors.push(`Row "${r[0]}" is not a real calendar date.`);
+        continue;
+      }
+      if (parsedDate.getUTCDay() !== 0) {
+        errors.push(`Row "${r[0]}" is not a Sunday — check the date.`);
+        continue;
+      }
+      if (monthKey && r[0].slice(0, 7) !== monthKey) {
+        errors.push(`Row "${r[0]}" isn't in ${monthStr || "the reported month"} — check the date or the Report Month field.`);
+        continue;
+      }
+      if (seenDates.has(r[0])) {
+        errors.push(`Sunday ${r[0]} appears more than once in the WEEKLY DATA table.`);
+        continue;
+      }
+      seenDates.add(r[0]);
+
+      const rn = (v: string | undefined, name: string, opts: { integer?: boolean; max: number }): number | null => {
         const x = (v || "").replace(/[,\s₱]/g, "");
         if (x === "" || isNaN(Number(x))) {
           errors.push(`Sunday ${r[0]}: "${name}" must be a number (got "${v || "blank"}").`);
           return null;
         }
-        return Number(x);
+        const n = Number(x);
+        if (n < 0) {
+          errors.push(`Sunday ${r[0]}: "${name}" can't be negative.`);
+          return null;
+        }
+        if (opts.integer && !Number.isInteger(n)) {
+          errors.push(`Sunday ${r[0]}: "${name}" must be a whole number.`);
+          return null;
+        }
+        if (n > opts.max) {
+          errors.push(`Sunday ${r[0]}: "${name}" is too large.`);
+          return null;
+        }
+        return n;
       };
-      const regulars = rn(r[1], "Regulars");
-      const vip = rn(r[2], "First Timers (VIP)");
-      const giving = rn(r[3], "Tithes & Offering");
+      const regulars = rn(r[1], "Regulars", { integer: true, max: MAX_HEADCOUNT });
+      const vip = rn(r[2], "First Timers (VIP)", { integer: true, max: MAX_HEADCOUNT });
+      const giving = rn(r[3], "Tithes & Offering", { max: MAX_GIVING });
       if (regulars === null || vip === null || giving === null) continue;
       weeks.push({ date: r[0], regulars, vip, giving, sermon: r[4] || "—", preacher: r[5] || "—" });
     }

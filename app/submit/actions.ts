@@ -8,11 +8,20 @@ import type { ParsedSubmission } from "@/lib/types";
 
 export type SubmitResult = { ok: false; errors: string[] } | { ok: true; church: string; monthLabel: string };
 
+const GENERIC_SAVE_ERROR = [
+  "Something went wrong saving your report. Please try again in a moment — if it keeps happening, let your admin know.",
+];
+
 /** Guided-form submit. Always routes to the pending queue — never writes live data directly. */
 export async function submitForm(input: WeekFormInput): Promise<SubmitResult> {
   const result = validateWeekForm(input);
   if (!result.ok) return { ok: false, errors: result.errors };
-  await routeSubmission(result.data);
+  try {
+    await routeSubmission(result.data);
+  } catch (err) {
+    console.error("submitForm: routeSubmission failed", err);
+    return { ok: false, errors: GENERIC_SAVE_ERROR };
+  }
   return { ok: true, church: result.data.church, monthLabel: formatMonthLabel(result.data.monthKey) };
 }
 
@@ -23,7 +32,12 @@ export async function submitForm(input: WeekFormInput): Promise<SubmitResult> {
 export async function confirmCsv(rawText: string): Promise<SubmitResult> {
   const result = parseCSV(rawText);
   if (!result.ok) return { ok: false, errors: result.errors };
-  await routeSubmission(result.data);
+  try {
+    await routeSubmission(result.data);
+  } catch (err) {
+    console.error("confirmCsv: routeSubmission failed", err);
+    return { ok: false, errors: GENERIC_SAVE_ERROR };
+  }
   return { ok: true, church: result.data.church, monthLabel: formatMonthLabel(result.data.monthKey) };
 }
 

@@ -5,6 +5,7 @@
 
 import { dateLabel } from "./format";
 import { sundays } from "./dates";
+import { MAX_GIVING, MAX_HEADCOUNT } from "./limits";
 import type { ParsedSubmission, Week } from "./types";
 
 export type WeekFieldInput = {
@@ -50,22 +51,35 @@ export function validateWeekForm(f: WeekFormInput): ValidateResult {
     );
     if (!filled) return;
 
-    const nf = (k: "regulars" | "vip" | "giving", label: string): number | null => {
+    const nf = (
+      k: "regulars" | "vip" | "giving",
+      label: string,
+      opts: { integer?: boolean; max: number }
+    ): number | null => {
       const x = v[k];
       if (x == null || String(x).trim() === "" || isNaN(Number(x))) {
         errs.push(`${dateLabel(d)}: "${label}" needs a number.`);
         return null;
       }
-      if (Number(x) < 0) {
+      const n = Number(x);
+      if (n < 0) {
         errs.push(`${dateLabel(d)}: "${label}" can't be negative.`);
         return null;
       }
-      return Number(x);
+      if (opts.integer && !Number.isInteger(n)) {
+        errs.push(`${dateLabel(d)}: "${label}" must be a whole number.`);
+        return null;
+      }
+      if (n > opts.max) {
+        errs.push(`${dateLabel(d)}: "${label}" is too large.`);
+        return null;
+      }
+      return n;
     };
 
-    const regulars = nf("regulars", "Regulars");
-    const vip = nf("vip", "First Timers (VIP)");
-    const giving = nf("giving", "Tithes & Offering");
+    const regulars = nf("regulars", "Regulars", { integer: true, max: MAX_HEADCOUNT });
+    const vip = nf("vip", "First Timers (VIP)", { integer: true, max: MAX_HEADCOUNT });
+    const giving = nf("giving", "Tithes & Offering", { max: MAX_GIVING });
     const sermon = (v.sermon || "").trim();
     if (!sermon) errs.push(`${dateLabel(d)}: please add the sermon title.`);
     if (regulars === null || vip === null || giving === null || !sermon) return;

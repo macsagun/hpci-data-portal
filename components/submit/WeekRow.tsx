@@ -25,6 +25,7 @@ export default function WeekRow({
           <input
             type="number"
             min={0}
+            step={1}
             value={value.regulars ?? ""}
             onChange={(e) => onChange(date, "regulars", e.target.value)}
             placeholder="0"
@@ -36,6 +37,7 @@ export default function WeekRow({
           <input
             type="number"
             min={0}
+            step={1}
             value={value.vip ?? ""}
             onChange={(e) => onChange(date, "vip", e.target.value)}
             placeholder="0"

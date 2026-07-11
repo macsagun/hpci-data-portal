@@ -1,6 +1,13 @@
 import { prisma } from "./db";
 import type { ParsedSubmission, Week } from "./types";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+
+/** True if `err` is Prisma's "record to update/delete does not exist" error — the
+ * expected shape of a benign double-click race (e.g. two rapid clicks on the same
+ * Approve/Reject button), not a real failure. */
+function isRecordNotFoundError(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025";
+}
 
 function toWeek(row: { date: Date; regulars: number; vip: number; giving: Prisma.Decimal; sermon: string; preacher: string }): Week {
   return {
@@ -174,23 +181,39 @@ export async function getPendingCount(): Promise<number> {
   return prisma.pendingChange.count();
 }
 
+/**
+ * Resolves a submitted church name against known churches case-insensitively,
+ * so a CSV typed as "hpci johanan" lands on the real "HPCI Johanan" record
+ * instead of silently forking off a duplicate, data-fragmenting church. Only
+ * collapses exact case-insensitive matches — does not attempt fuzzy/typo
+ * matching, which risks false-positive merges.
+ */
+async function resolveChurchName(name: string): Promise<string> {
+  const trimmed = name.trim();
+  const existing = await prisma.church.findMany({ select: { name: true } });
+  const match = existing.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+  return match ? match.name : trimmed;
+}
+
 /** Every submission (form or CSV) lands here first — never written directly to the live table. */
 export async function routeSubmission(input: ParsedSubmission): Promise<void> {
+  const church = await resolveChurchName(input.church);
+
   await prisma.church.upsert({
-    where: { name: input.church },
+    where: { name: church },
     update: {},
-    create: { name: input.church },
+    create: { name: church },
   });
 
   const existingLive = await prisma.submission.findUnique({
-    where: { church_monthKey: { church: input.church, monthKey: input.monthKey } },
+    where: { church_monthKey: { church, monthKey: input.monthKey } },
     select: { id: true },
   });
   const isUpdate = !!existingLive;
 
   await prisma.$transaction(async (tx) => {
     const existingPending = await tx.pendingChange.findUnique({
-      where: { church_monthKey: { church: input.church, monthKey: input.monthKey } },
+      where: { church_monthKey: { church, monthKey: input.monthKey } },
       select: { id: true },
     });
 
@@ -201,7 +224,7 @@ export async function routeSubmission(input: ParsedSubmission): Promise<void> {
         })
       : await tx.pendingChange.create({
           data: {
-            church: input.church,
+            church,
             monthKey: input.monthKey,
             wins: input.wins,
             challenges: input.challenges,
@@ -217,56 +240,69 @@ export async function routeSubmission(input: ParsedSubmission): Promise<void> {
 }
 
 export async function approvePending(id: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const pending = await tx.pendingChange.findUnique({
-      where: { id },
-      include: { weeks: true },
-    });
-    if (!pending) return;
+  try {
+    await prisma.$transaction(async (tx) => {
+      const pending = await tx.pendingChange.findUnique({
+        where: { id },
+        include: { weeks: true },
+      });
+      if (!pending) return;
 
-    const submission = await tx.submission.upsert({
-      where: { church_monthKey: { church: pending.church, monthKey: pending.monthKey } },
-      update: { wins: pending.wins, challenges: pending.challenges },
-      create: {
-        church: pending.church,
-        monthKey: pending.monthKey,
-        wins: pending.wins,
-        challenges: pending.challenges,
-      },
-    });
+      const submission = await tx.submission.upsert({
+        where: { church_monthKey: { church: pending.church, monthKey: pending.monthKey } },
+        update: { wins: pending.wins, challenges: pending.challenges },
+        create: {
+          church: pending.church,
+          monthKey: pending.monthKey,
+          wins: pending.wins,
+          challenges: pending.challenges,
+        },
+      });
 
-    await tx.submissionWeek.deleteMany({ where: { submissionId: submission.id } });
-    await tx.submissionWeek.createMany({
-      data: pending.weeks.map((w) => ({
-        submissionId: submission.id,
-        date: w.date,
-        regulars: w.regulars,
-        vip: w.vip,
-        giving: w.giving,
-        sermon: w.sermon,
-        preacher: w.preacher,
-      })),
-    });
+      await tx.submissionWeek.deleteMany({ where: { submissionId: submission.id } });
+      await tx.submissionWeek.createMany({
+        data: pending.weeks.map((w) => ({
+          submissionId: submission.id,
+          date: w.date,
+          regulars: w.regulars,
+          vip: w.vip,
+          giving: w.giving,
+          sermon: w.sermon,
+          preacher: w.preacher,
+        })),
+      });
 
-    await tx.pendingChange.delete({ where: { id } });
+      await tx.pendingChange.delete({ where: { id } });
 
-    await tx.approvalLog.create({
-      data: { church: pending.church, monthKey: pending.monthKey, action: "approve" },
+      await tx.approvalLog.create({
+        data: { church: pending.church, monthKey: pending.monthKey, action: "approve" },
+      });
     });
-  });
+  } catch (err) {
+    // Two rapid clicks on the same Approve button both start before either
+    // commits: the second one's delete/upsert can race against the first's
+    // already-committed change. Treat "it's already gone" as a no-op success
+    // rather than surfacing a scary error for what the admin experiences as
+    // a single click.
+    if (!isRecordNotFoundError(err)) throw err;
+  }
 }
 
 export async function rejectPending(id: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const pending = await tx.pendingChange.findUnique({ where: { id }, select: { church: true, monthKey: true } });
-    if (!pending) return;
+  try {
+    await prisma.$transaction(async (tx) => {
+      const pending = await tx.pendingChange.findUnique({ where: { id }, select: { church: true, monthKey: true } });
+      if (!pending) return;
 
-    await tx.pendingChange.delete({ where: { id } });
+      await tx.pendingChange.delete({ where: { id } });
 
-    await tx.approvalLog.create({
-      data: { church: pending.church, monthKey: pending.monthKey, action: "reject" },
+      await tx.approvalLog.create({
+        data: { church: pending.church, monthKey: pending.monthKey, action: "reject" },
+      });
     });
-  });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
 }
 
 export type AuditLogEntry = {
