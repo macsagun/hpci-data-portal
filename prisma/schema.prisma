@@ -1,0 +1,85 @@
+// His Presence Church Data Portal — database schema.
+// See /Users/macsagun/.claude/plans/async-leaping-pudding.md for the full design rationale.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Church {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}
+
+/// The "live" record — one per church + monthKey. Only ever written by an admin approval.
+model Submission {
+  id         String           @id @default(cuid())
+  church     String
+  monthKey   String           @db.Char(7) // "YYYY-MM"
+  wins       String           @db.Text
+  challenges String           @db.Text
+  weeks      SubmissionWeek[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([church, monthKey])
+  @@index([monthKey])
+}
+
+model SubmissionWeek {
+  id           String     @id @default(cuid())
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId String
+  date         DateTime   @db.Date
+  regulars     Int
+  vip          Int
+  giving       Decimal    @db.Decimal(12, 2)
+  sermon       String
+  preacher     String     @default("—")
+
+  @@index([submissionId])
+}
+
+/// The approval queue — one per church + monthKey. Submitting again replaces the existing draft.
+model PendingChange {
+  id          String        @id @default(cuid())
+  church      String
+  monthKey    String        @db.Char(7)
+  wins        String        @db.Text
+  challenges  String        @db.Text
+  isUpdate    Boolean
+  submittedAt DateTime      @default(now())
+  weeks       PendingWeek[]
+
+  @@unique([church, monthKey])
+  @@index([monthKey])
+}
+
+model PendingWeek {
+  id              String        @id @default(cuid())
+  pendingChange   PendingChange @relation(fields: [pendingChangeId], references: [id], onDelete: Cascade)
+  pendingChangeId String
+  date            DateTime      @db.Date
+  regulars        Int
+  vip             Int
+  giving          Decimal       @db.Decimal(12, 2)
+  sermon          String
+  preacher        String        @default("—")
+
+  @@index([pendingChangeId])
+}
+
+/// Minimal audit trail. No named actor — auth is a single shared passphrase, no user table.
+model ApprovalLog {
+  id       String   @id @default(cuid())
+  church   String
+  monthKey String   @db.Char(7)
+  action   String // "approve" | "reject"
+  actedAt  DateTime @default(now())
+}

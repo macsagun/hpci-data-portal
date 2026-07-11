@@ -1,0 +1,175 @@
+.pillRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pill {
+  padding: 8px 15px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-block;
+  border: 1px solid #d7dbe2;
+  background: #fff;
+  color: #475467;
+}
+
+.pillActive {
+  border: 1px solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.kpiLabel {
+  font-size: 12.5px;
+  color: var(--faint);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.kpiValue {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kpiSub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.tableCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  font-size: 13.5px;
+}
+
+.table thead tr {
+  background: #f9fafb;
+  text-align: left;
+  color: var(--muted);
+  border-bottom: 1px solid #eef0f3;
+}
+
+.table th {
+  padding: 13px 16px;
+  font-weight: 700;
+}
+
+.table td {
+  padding: 14px 16px;
+  border-top: 1px solid #eef0f3;
+}
+
+.rowLink {
+  cursor: pointer;
+  color: inherit;
+  display: table-row;
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  background: #f9fafb;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.badgeSubmitted {
+  background: var(--positive-tint);
+  color: var(--positive-ink);
+}
+
+.badgeAwaiting {
+  background: var(--warning-tint);
+  color: var(--warning);
+}
+
+.badgePending {
+  background: var(--warning-tint-2);
+  color: var(--warning-ink);
+}
+
+.emptyCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--positive-tint);
+  color: var(--positive);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.emptyTitle {
+  font-weight: 800;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.emptySubtitle {
+  font-size: 13.5px;
+  color: var(--faint);
+}
+
+.chartsGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chartCardTitle {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.chartCardSubtitle {
+  font-size: 12.5px;
+  color: var(--faint);
+  margin-bottom: 16px;
+}

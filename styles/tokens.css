@@ -1,0 +1,92 @@
+:root {
+  /* --font-sans is provided by next/font (see app/layout.tsx); this is only
+     a fallback for contexts where that class hasn't applied yet. */
+  --font-sans: system-ui, sans-serif;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --border: #e7e9ee;
+
+  --ink: #101828;
+  --muted: #667085;
+  --faint: #98a2b3;
+
+  --accent: #2f6ae0;
+  --accent-hover: #245bd0;
+  --accent-tint: #eaf0fd;
+
+  --positive: #12946a;
+  --positive-ink: #0f7a56;
+  --positive-tint: #e6f6ef;
+
+  --warning: #a5600f;
+  --warning-ink: #b06514;
+  --warning-tint: #fbf1e4;
+  --warning-tint-2: #f9ecdc;
+
+  --danger: #b42318;
+  --danger-ink: #d64545;
+  --danger-tint: #fdecec;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 9px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d7dbe2;
+  border-radius: 6px;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
