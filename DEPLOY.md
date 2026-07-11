@@ -4,6 +4,20 @@ This app is sized for ~9 local churches submitting one report a month, plus occa
 admin review. That's comfortably within both platforms' free tiers, so no paid plan
 should be needed.
 
+## Live deployment
+
+- **App**: https://hpci-data-portal.vercel.app
+- **Vercel**: project `hpci-data-portal`, team `hpci`, Hobby (free) plan
+- **Neon**: project `hpci-data-portal`, region `aws-ap-southeast-1` (Singapore), Postgres 17
+
+Auto-deploy-on-push isn't wired up yet — Vercel needs a GitHub "Login Connection" added
+to the account before it can connect the repo (Project Settings → Git in the Vercel
+dashboard, or `vercel git connect` once that connection exists). Until then, deploy with:
+
+```bash
+npx vercel deploy --prod --scope hpci
+```
+
 ## 1. Create a Neon Postgres project
 
 1. Go to [neon.tech](https://neon.tech) and create a free account/project.
@@ -17,14 +31,27 @@ should be needed.
 ## 2. Create the Vercel project
 
 1. Push this repo to GitHub (or your git host of choice).
-2. In Vercel, "Add New Project" → import the repo. Framework preset: Next.js (auto-detected).
+2. In Vercel, "Add New Project" → import the repo, or via CLI: `vercel project add <name>`.
+   - **If using the CLI's `project add`** (rather than the dashboard import flow), it does
+     NOT auto-detect the framework and defaults to "Other", which silently breaks routing
+     (every route 404s at the platform level even though the build succeeds). Fix with:
+     `vercel project update <name> --framework nextjs`, then redeploy.
 3. Stay on the free **Hobby** plan.
-4. Add environment variables (Project Settings → Environment Variables), for both
-   Production and Preview:
+4. **Disable SSO Deployment Protection** if the team has it on by default (new teams often
+   do) — it blocks all `*.vercel.app` URLs behind a Vercel login wall, which breaks the
+   public `/submit` page. Project Settings → Deployment Protection in the dashboard, or
+   `vercel project protection disable <name> --sso`. (The dashboard still has its own
+   separate passphrase gate built into the app — this only removes Vercel's platform-level
+   gate.)
+5. Add environment variables (Project Settings → Environment Variables), for Production,
+   Preview, and Development:
    - `DATABASE_URL` — the pooled Neon connection string from step 1
    - `DIRECT_URL` — the direct Neon connection string from step 1
-   - `HPCI_ADMIN_PASSPHRASE` — the real leadership passphrase (not the dev default)
+   - `HPCI_ADMIN_PASSPHRASE` — the real leadership passphrase
    - `HPCI_SESSION_SECRET` — a random 32+ byte string, e.g. `openssl rand -base64 32`
+
+   Note: env vars are stored "sensitive" (write-only) by default — `vercel env pull` will
+   show them as empty even when set correctly. Verify by testing the live app instead.
 
 `npm run build` already runs `prisma generate` via the `postinstall` script, so Vercel's
 build step needs no extra configuration for that part.
@@ -47,9 +74,9 @@ DATABASE_URL="<neon pooled url>" DIRECT_URL="<neon direct url>" npm run db:seed
 
 ## 4. Deploy
 
-Push to the branch Vercel is tracking (or click Deploy in the dashboard). Once live,
-visit `/submit` to confirm the form loads, and `/dashboard` to confirm the passphrase
-gate works with your real `HPCI_ADMIN_PASSPHRASE`.
+`npx vercel deploy --prod --scope hpci` (or, once auto-deploy is connected, just push to
+the tracked branch). Once live, visit `/submit` to confirm the form loads, and `/dashboard`
+to confirm the passphrase gate works with your real `HPCI_ADMIN_PASSPHRASE`.
 
 ## Cost notes
 
